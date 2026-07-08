@@ -1,122 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+
+const initialData = {
+  todo: [
+    { id: 'task-1', content: 'Set up Vite and React' },
+    { id: 'task-2', content: 'Install Drag and Drop library' },
+  ],
+  doing: [
+    { id: 'task-3', content: 'Build the Kanban UI' },
+  ],
+  done: [],
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [columns, setColumns] = useState(initialData);
+
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    if (source.droppableId === destination.droppableId) {
+      const column = [...columns[source.droppableId]];
+      const [removed] = column.splice(source.index, 1);
+      column.splice(destination.index, 0, removed);
+      setColumns({ ...columns, [source.droppableId]: column });
+    } else {
+      const sourceCol = [...columns[source.droppableId]];
+      const destCol = [...columns[destination.droppableId]];
+      const [removed] = sourceCol.splice(source.index, 1);
+      destCol.splice(destination.index, 0, removed);
+      setColumns({
+        ...columns,
+        [source.droppableId]: sourceCol,
+        [destination.droppableId]: destCol,
+      });
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="p-10 font-sans bg-gray-900 min-h-screen text-white">
+      <h1 className="text-center mb-10"> Kanbanyanihan Board</h1>
+      
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+          {Object.entries(columns).map(([columnId, tasks]) => (
+            <div key={columnId} style={{ backgroundColor: '#2a2a40', padding: '15px', borderRadius: '8px', width: '300px' }}>
+              <h2 style={{ textTransform: 'capitalize', marginTop: '0', borderBottom: '2px solid #444', paddingBottom: '10px' }}>
+                {columnId}
+              </h2>
+              <Droppable droppableId={columnId}>
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} style={{ minHeight: '200px' }}>
+                    {tasks.map((task, index) => (
+                      <Draggable key={task.id} draggableId={task.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                              padding: '15px',
+                              margin: '0 0 10px 0',
+                              backgroundColor: snapshot.isDragging ? '#4b4b7a' : '#3b3b5a',
+                              borderRadius: '4px',
+                              boxShadow: snapshot.isDragging ? '0 5px 15px rgba(0,0,0,0.3)' : 'none',
+                              ...provided.draggableProps.style,
+                            }}
+                          >
+                            {task.content}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </div>
+          ))}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </DragDropContext>
+    </div>
+  );
 }
 
-export default App
+export default App;
